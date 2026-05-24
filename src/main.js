@@ -14,16 +14,42 @@ function extractPoints(labels = []) {
   }
   return 0;
 }
+
 async function loadTasks() {
-  const response = await fetch(`${VIKUNJA_URL}/projects`, {
+  const response = await fetch(`${VIKUNJA_URL}/projects/2/tasks`, {
     headers: {
       Authorization: `Bearer ${API_TOKEN}`,
     },
   });
 
-  const projects = await response.json();
+  const tasks = await response.json();
 
-  console.log(projects);
+  console.log(tasks);
+
+  const doneTasks = tasks.filter((task) => task.done);
+
+  doneTasks.forEach((task) => {
+    const assignee = task.assignees?.[0]?.username || 'Sem responsável';
+
+    const points = extractPoints(task.labels);
+
+    if (!users[assignee]) {
+      users[assignee] = {
+        points: 0,
+        tasks: [],
+      };
+    }
+
+    users[assignee].points += points;
+
+    users[assignee].tasks.push({
+      title: task.title,
+      points,
+      doneAt: task.done_at,
+    });
+  });
+
+  render();
 }
 
 function render() {
