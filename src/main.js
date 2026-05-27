@@ -11,10 +11,10 @@ const rewards = []
 
 function extractPoints(labels = []) {
   for (const label of labels) {
-    const match = label.title.match(/(\d+)/)
+    const match = label.title.match(/(\d+(?:\.\d+)?)/)
 
     if (match) {
-      return parseInt(match[1])
+      return parseFloat(match[1])
     }
   }
 
