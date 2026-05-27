@@ -23,16 +23,16 @@ export function renderRewards(rewards, users, currentUser) {
                 <h3>${reward.title}</h3>
                 <div class="reward-footer">
                   <span class="reward-points">${formatPoints(reward.points)} pts</span>
-                  <div class="reward-buttons">
-                    ${link ? `<button class="btn-open" data-url="${link}">Abrir</button>` : ''}
-                    <button
-                      class="btn-redeem"
-                      data-index="${index}"
-                      ${!canRedeem ? 'disabled' : ''}
-                    >
-                      ${canRedeem ? 'Resgatar' : 'Sem saldo'}
-                    </button>
-                  </div>
+                </div>
+                <div class="reward-buttons">
+                  ${link ? `<button class="btn-open" data-url="${link.replace(/"/g, '')}">Abrir Loja</button>` : ''}
+                  <button
+                    class="btn-redeem"
+                    data-index="${index}"
+                    ${!canRedeem ? 'disabled' : ''}
+                  >
+                    ${canRedeem ? 'Resgatar' : 'Sem saldo'}
+                  </button>
                 </div>
               </div>
             </div>

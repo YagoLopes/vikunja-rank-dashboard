@@ -300,6 +300,7 @@ section {
   justify-content: space-between;
   align-items: center;
   margin-top: auto;
+  margin-bottom: 12px;
 }
 
 .reward-points {
@@ -311,6 +312,8 @@ section {
 .reward-buttons {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .btn-open,
