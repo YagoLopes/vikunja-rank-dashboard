@@ -2,6 +2,17 @@ import { formatPoints } from '../utils/points'
 import { parseRewardDescription } from '../utils/parser'
 import { createRewardRedeem } from '../api/vikunja'
 
+function extractUrlFromDescription(desc) {
+  if (!desc) return ''
+
+  // If it's an HTML link, extract href
+  const hrefMatch = desc.match(/href=["']?([^"'\s>]+)/)
+  if (hrefMatch) return hrefMatch[1]
+
+  // Otherwise, take first line
+  return desc.split('\n')[0]?.trim() || ''
+}
+
 export function renderRewards(rewards, users, currentUser) {
   const section = document.createElement('section')
 
@@ -14,7 +25,7 @@ export function renderRewards(rewards, users, currentUser) {
         .map(
           (reward, index) => {
             const canRedeem = userBalance >= reward.points
-            const link = reward.description?.split('\n')[0]?.trim() || ''
+            const link = extractUrlFromDescription(reward.description)
 
             return `
             <div class="reward-card">
