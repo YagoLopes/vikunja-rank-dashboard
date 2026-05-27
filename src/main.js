@@ -104,7 +104,7 @@ function render() {
               </div>
 
               <div class="points">
-                ${data.points}
+                ${Math.floor(data.points)}
               </div>
 
               <div class="subtitle">
@@ -132,7 +132,7 @@ function render() {
               </div>
 
               <div class="reward-points">
-                ${reward.points} pts
+                ${Math.floor(reward.points)} pts
               </div>
 
               <button class="reward-button">
@@ -155,7 +155,7 @@ function render() {
                 <strong>${task.title}</strong>
 
                 <div class="small">
-                  ${name} • +${task.points} pts
+                  ${name} • +${Math.floor(task.points)} pts
                 </div>
               </div>
             `)
