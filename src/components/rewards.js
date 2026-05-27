@@ -13,22 +13,18 @@ export function renderRewards(rewards, users, currentUser) {
       ${rewards
         .map(
           (reward, index) => {
-            const parsed = parseRewardDescription(reward.description)
             const canRedeem = userBalance >= reward.points
-            const imageHtml = parsed.image
-              ? `<img src="${parsed.image}" alt="${reward.title.replace(/"/g, '')}" class="reward-image" onerror="this.style.display='none'">`
-              : `<div class="reward-image-placeholder">${reward.title[0].toUpperCase()}</div>`
+            const link = reward.description?.split('\n')[1]?.trim() || ''
 
             return `
             <div class="reward-card">
-              ${imageHtml}
+              <div class="reward-placeholder">${reward.title[0].toUpperCase()}</div>
               <div class="reward-content">
                 <h3>${reward.title}</h3>
-                ${parsed.description ? `<p>${parsed.description}</p>` : ''}
                 <div class="reward-footer">
                   <span class="reward-points">${formatPoints(reward.points)} pts</span>
                   <div class="reward-buttons">
-                    ${parsed.url ? `<button class="btn-open" data-url="${parsed.url}">Abrir</button>` : ''}
+                    ${link ? `<button class="btn-open" data-url="${link}">Abrir</button>` : ''}
                     <button
                       class="btn-redeem"
                       data-index="${index}"
