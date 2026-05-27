@@ -16,8 +16,8 @@ export function renderRewards(rewards, users, currentUser) {
             const parsed = parseRewardDescription(reward.description)
             const canRedeem = userBalance >= reward.points
             const imageHtml = parsed.image
-              ? `<img src="${parsed.image}" alt="${reward.title}" class="reward-image">`
-              : `<div class="reward-image-placeholder">${reward.title[0]}</div>`
+              ? `<img src="${parsed.image}" alt="${reward.title.replace(/"/g, '')}" class="reward-image" onerror="this.style.display='none'">`
+              : `<div class="reward-image-placeholder">${reward.title[0].toUpperCase()}</div>`
 
             return `
             <div class="reward-card">
