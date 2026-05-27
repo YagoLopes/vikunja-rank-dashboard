@@ -14,7 +14,7 @@ export function renderRewards(rewards, users, currentUser) {
         .map(
           (reward, index) => {
             const canRedeem = userBalance >= reward.points
-            const link = reward.description?.split('\n')[1]?.trim() || ''
+            const link = reward.description?.split('\n')[0]?.trim() || ''
 
             return `
             <div class="reward-card">
