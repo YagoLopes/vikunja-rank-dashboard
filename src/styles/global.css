@@ -32,17 +32,25 @@ body {
   color: var(--text-primary);
   line-height: 1.6;
   overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+#app {
+  width: 100%;
 }
 
 .container {
-  max-width: 100%;
   margin: 0 auto;
-  padding: 16px;
+  padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 @media (min-width: 640px) {
   .container {
-    padding: 24px;
+    max-width: calc(100% - 40px);
+    padding: 30px 40px;
   }
 }
 
@@ -55,6 +63,8 @@ body {
 
 section {
   margin: 32px 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .section-title {
@@ -139,17 +149,10 @@ section {
   gap: 16px;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   .grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr 1fr;
     gap: 20px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
   }
 }
 
@@ -159,9 +162,9 @@ section {
   gap: 16px;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   .reward-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr 1fr;
     gap: 20px;
   }
 }

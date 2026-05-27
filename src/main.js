@@ -118,22 +118,29 @@ function render() {
 
   app.innerHTML = ''
 
+  // Create container wrapper
+  const container = document.createElement('div')
+  container.className = 'container'
+
   // Render header
   const userBalance = users[currentUser]?.balance || 0
-  app.appendChild(renderHeader(currentUser, userBalance))
+  container.appendChild(renderHeader(currentUser, userBalance))
 
   // Render ranking
-  app.appendChild(renderRanking(users))
+  container.appendChild(renderRanking(users))
 
   // Render rewards
   const rewardsWithDescription = rewards.map((reward) => ({
     ...reward,
     description: reward.description || '',
   }))
-  app.appendChild(renderRewards(rewardsWithDescription, users, currentUser))
+  container.appendChild(renderRewards(rewardsWithDescription, users, currentUser))
 
   // Render history
-  app.appendChild(renderHistory(history))
+  container.appendChild(renderHistory(history))
+
+  // Append container to app
+  app.appendChild(container)
 }
 
 async function init() {
