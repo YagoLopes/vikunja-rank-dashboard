@@ -1,180 +1,185 @@
-import './style.css'
-import {
-  VIKUNJA_URL,
-  API_TOKEN,
-  PROJECT_TASKS,
-  PROJECT_REWARDS
-} from './config'
+import './styles/global.css'
 
-const users = {}
-const rewards = []
+import { getTasks, getRewards, getRewardHistory } from './api/vikunja'
+import { getCurrentUser } from './store/user'
+import { extractPoints, calcBalance } from './utils/points'
 
-function formatPoints(points) {
-  return parseFloat(points.toFixed(2))
-}
+import { renderHeader } from './components/header'
+import { renderRanking } from './components/ranking'
+import { renderRewards } from './components/rewards'
+import { renderHistory } from './components/history'
+import { showUserModal } from './components/modal'
 
-function extractPoints(labels = []) {
-  for (const label of labels) {
-    const match = label.title.match(/(\d+(?:\.\d+)?)/)
+let users = {}
+let rewards = []
+let history = []
+let currentUser = null
 
-    if (match) {
-      return parseFloat(match[1])
+function buildUserData(tasks, historyTasks) {
+  const userData = {}
+
+  // Get all assignees
+  const allAssignees = []
+  tasks.forEach((task) => {
+    if (task.assignees) {
+      task.assignees.forEach((assignee) => {
+        if (!allAssignees.includes(assignee.username)) {
+          allAssignees.push(assignee.username)
+        }
+      })
     }
-  }
-
-  return 0
-}
-
-async function fetchApi(url) {
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${API_TOKEN}`,
-    },
   })
 
-  return response.json()
-}
+  // Initialize users
+  allAssignees.forEach((assignee) => {
+    userData[assignee] = {
+      earned: 0,
+      spent: 0,
+      balance: 0,
+      tasks: [],
+      redeems: [],
+    }
+  })
 
-async function loadTasks() {
-  const tasks = await fetchApi(
-    `${VIKUNJA_URL}/projects/${PROJECT_TASKS}/tasks`
-  )
+  // Sum earned points from tasks
+  tasks.forEach((task) => {
+    if (task.done && task.assignees) {
+      const points = extractPoints(task.labels)
+      task.assignees.forEach((assignee) => {
+        if (userData[assignee.username]) {
+          userData[assignee.username].earned += points
+          userData[assignee.username].tasks.push({
+            title: task.title,
+            points,
+            doneAt: task.done_at,
+          })
+        }
+      })
+    }
+  })
 
-  const doneTasks = tasks.filter(task => task.done)
-
-  doneTasks.forEach(task => {
-    const assignee =
-      task.assignees?.[0]?.username || 'Sem responsável'
-
-    const points = extractPoints(task.labels)
-
-    if (!users[assignee]) {
-      users[assignee] = {
-        points: 0,
-        tasks: [],
+  // Sum spent points from history
+  historyTasks.forEach((task) => {
+    if (task.labels?.some((l) => l.title === 'reward')) {
+      const points = extractPoints(task.labels)
+      const userMatch = task.description?.match(/Usuário: (.+)/)?.[1]?.trim()
+      if (userMatch && userData[userMatch]) {
+        userData[userMatch].spent += points
+        userData[userMatch].redeems.push({
+          title: task.title,
+          points,
+          doneAt: task.done_at,
+        })
       }
     }
-
-    users[assignee].points += points
-
-    users[assignee].tasks.push({
-      title: task.title,
-      points,
-      doneAt: task.done_at,
-    })
   })
+
+  // Calculate balance
+  Object.values(userData).forEach((user) => {
+    user.balance = calcBalance(user.earned, user.spent)
+  })
+
+  return userData
 }
 
-async function loadRewards() {
-  const data = await fetchApi(
-    `${VIKUNJA_URL}/projects/${PROJECT_REWARDS}/tasks`
-  )
+function getAllAssignees() {
+  const assignees = new Set()
+  Object.keys(users).forEach((name) => assignees.add(name))
+  return Array.from(assignees)
+}
 
-  data.forEach(task => {
-    rewards.push({
-      title: task.title,
-      points: extractPoints(task.labels),
-      done: task.done,
-    })
-  })
+function showSkeleton() {
+  const app = document.querySelector('#app')
+  app.innerHTML = `
+    <div class="container">
+      <div class="skeleton" style="height: 120px; margin-bottom: 40px;"></div>
+      <h2 class="section-title">Carregando...</h2>
+      <div class="grid">
+        ${[1, 2, 3].map(() => '<div class="skeleton"></div>').join('')}
+      </div>
+    </div>
+  `
 }
 
 function render() {
   const app = document.querySelector('#app')
 
-  const ranking = Object.entries(users)
-    .sort((a, b) => b[1].points - a[1].points)
+  // Check if user is selected
+  if (!currentUser) {
+    const assignees = getAllAssignees()
+    if (assignees.length === 0) {
+      app.innerHTML = '<div class="container"><p>Nenhum dado disponível</p></div>'
+      return
+    }
+    showUserModal(assignees)
+    return
+  }
 
-  const medals = ['🥇', '🥈', '🥉']
+  app.innerHTML = ''
 
-  app.innerHTML = `
-    <div class="container">
+  // Render header
+  const userBalance = users[currentUser]?.balance || 0
+  app.appendChild(renderHeader(currentUser, userBalance))
 
-      <header class="hero">
-        <h1>🏆 Casa XP</h1>
-        <p>
-          Sistema doméstico de tarefas e recompensas
-        </p>
-      </header>
+  // Render ranking
+  app.appendChild(renderRanking(users))
 
-      <section>
-        <h2 class="section-title">Ranking</h2>
+  // Render rewards
+  const rewardsWithDescription = rewards.map((reward) => ({
+    ...reward,
+    description: reward.description || '',
+  }))
+  app.appendChild(renderRewards(rewardsWithDescription, users, currentUser))
 
-        <div class="grid">
-          ${ranking.map(([name, data], index) => `
-            <div class="card">
-              <div class="name">
-                ${medals[index] || '⭐'} ${name}
-              </div>
-
-              <div class="points">
-                ${formatPoints(data.points)}
-              </div>
-
-              <div class="subtitle">
-                pontos acumulados
-              </div>
-
-              <div class="badge">
-                ${data.tasks.length} tarefas concluídas
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </section>
-
-      <section>
-        <h2 class="section-title">
-          🎁 Loja de Prêmios
-        </h2>
-
-        <div class="reward-grid">
-          ${rewards.map(reward => `
-            <div class="reward-card">
-              <div class="reward-title">
-                ${reward.title}
-              </div>
-
-              <div class="reward-points">
-                ${formatPoints(reward.points)} pts
-              </div>
-
-              <button class="reward-button">
-                Resgatar
-              </button>
-            </div>
-          `).join('')}
-        </div>
-      </section>
-
-      <section>
-        <h2 class="section-title">
-          ✅ Últimas tarefas concluídas
-        </h2>
-
-        <div class="task-grid">
-          ${ranking.flatMap(([name, data]) =>
-            data.tasks.map(task => `
-              <div class="task-card">
-                <strong>${task.title}</strong>
-
-                <div class="small">
-                  ${name} • +${formatPoints(task.points)} pts
-                </div>
-              </div>
-            `)
-          ).join('')}
-        </div>
-      </section>
-
-    </div>
-  `
+  // Render history
+  app.appendChild(renderHistory(history))
 }
 
 async function init() {
-  await loadTasks()
-  await loadRewards()
-  render()
+  try {
+    showSkeleton()
+
+    const [tasksData, rewardsData, historyData] = await Promise.all([
+      getTasks(),
+      getRewards(),
+      getRewardHistory(),
+    ])
+
+    tasks = tasksData || []
+    history = historyData || []
+
+    users = buildUserData(tasks, history)
+
+    rewards = (rewardsData || []).map((task) => ({
+      title: task.title,
+      points: extractPoints(task.labels),
+      description: task.description || '',
+      done: task.done,
+    }))
+
+    currentUser = getCurrentUser()
+
+    render()
+
+    // Listen for user changes
+    window.addEventListener('userSelected', () => {
+      currentUser = getCurrentUser()
+      render()
+    })
+
+    // Listen for redeem success
+    window.addEventListener('redeemSuccess', () => {
+      init()
+    })
+  } catch (error) {
+    console.error('Init error:', error)
+    const app = document.querySelector('#app')
+    app.innerHTML = `
+      <div class="container">
+        <p style="color: red;">Erro ao carregar dados: ${error.message}</p>
+      </div>
+    `
+  }
 }
 
 init()
