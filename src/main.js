@@ -9,6 +9,10 @@ import {
 const users = {}
 const rewards = []
 
+function formatPoints(points) {
+  return parseFloat(points.toFixed(2))
+}
+
 function extractPoints(labels = []) {
   for (const label of labels) {
     const match = label.title.match(/(\d+(?:\.\d+)?)/)
@@ -104,7 +108,7 @@ function render() {
               </div>
 
               <div class="points">
-                ${Math.floor(data.points)}
+                ${formatPoints(data.points)}
               </div>
 
               <div class="subtitle">
@@ -132,7 +136,7 @@ function render() {
               </div>
 
               <div class="reward-points">
-                ${Math.floor(reward.points)} pts
+                ${formatPoints(reward.points)} pts
               </div>
 
               <button class="reward-button">
@@ -155,7 +159,7 @@ function render() {
                 <strong>${task.title}</strong>
 
                 <div class="small">
-                  ${name} • +${Math.floor(task.points)} pts
+                  ${name} • +${formatPoints(task.points)} pts
                 </div>
               </div>
             `)
