@@ -10,6 +10,7 @@ import { renderRewards } from './components/rewards'
 import { renderHistory } from './components/history'
 import { showUserModal } from './components/modal'
 
+let tasks = []
 let users = {}
 let rewards = []
 let history = []
